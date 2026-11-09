@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08162e">
+  <meta name="description" content="Explore Connect Four. A classroom question challenge with editable prompts and a Connect Four board.">
+  <title>Explore | Connect Four</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+  <script src="questions.js" defer></script>
+  <script src="game.js" defer></script>
+</head>
+<body data-theme="night">
+  <div class="background-orb orb-one"></div>
+  <div class="background-orb orb-two"></div>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Explore Connect Four home">
+      <span class="brand-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="brand-words"><strong>EXPLORE</strong><small>STANDWITHUS UK</small></span>
+    </a>
+    <nav class="top-actions" aria-label="Game controls">
+      <span class="version-tag">CLASSROOM EDITION</span>
+      <button class="top-btn" id="helpButton" type="button"><span aria-hidden="true">?</span> How to play</button>
+      <button class="top-btn" id="themeButton" type="button" aria-label="Toggle light mode">☼ <span id="themeText">Light mode</span></button>
+    </nav>
+  </header>
+
+  <main class="main-shell">
+    <section class="hero" aria-label="Game introduction">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="signal"></span> THINK FAST. THINK AHEAD. MAKE YOUR MOVE.</div>
+        <h1>CONNECT <span>FOUR<span class="period">.</span></span></h1>
+        <p>Two teams. One board. The right answer could change everything.</p>
+      </div>
+      <div class="hero-mini" aria-hidden="true"><div class="mini-token blue"></div><div class="mini-token orange"></div><div class="mini-token orange"></div><div class="mini-token blue"></div><div class="mini-token blue"></div><div class="mini-token blue"></div><div class="mini-token blue"></div><div class="mini-token orange"></div><div class="mini-token orange"></div></div>
+    </section>
+
+    <div class="app-layout">
+      <aside class="left-column">
+        <section class="panel teams-panel">
+          <div class="section-label"><span>01 / THE TEAMS</span><span class="live-dot">● LIVE GAME</span></div>
+          <div id="teamCard0" class="team-card active blue-card">
+            <div class="team-card-top"><span class="team-colour blue-dot"></span><span class="team-code">TEAM 01</span><span class="turn-chip" id="turnChip0">YOUR TURN</span></div>
+            <div class="team-line"><span id="teamLabel0">BLUE TEAM</span><span class="team-count" id="teamScore0">00</span></div>
+            <span class="team-subline">SQUARES CLAIMED</span>
+          </div>
+          <div class="team-card orange-card" id="teamCard1">
+            <div class="team-card-top"><span class="team-colour orange-dot"></span><span class="team-code">TEAM 02</span><span class="turn-chip" id="turnChip1" hidden>YOUR TURN</span></div>
+            <div class="team-line"><span id="teamLabel1">CORAL TEAM</span><span class="team-count" id="teamScore1">00</span></div>
+            <span class="team-subline">SQUARES CLAIMED</span>
+          </div>
+          <div class="turn-message"><span class="pulse-mark"></span><span id="turnMessage">Blue team, choose your square.</span></div>
+        </section>
+
+        <section class="panel controls-panel">
+          <div class="section-label"><span>02 / GAME SETTINGS</span></div>
+          <label class="field-label" for="boardSize">BOARD SIZE</label>
+          <select id="boardSize" class="select-control">
+            <option value="7x6">7 × 6 · Classic</option>
+            <option value="6x5">6 × 5 · Medium</option>
+            <option value="5x4">5 × 4 · Compact</option>
+            <option value="4x4">4 × 4 · Quick game</option>
+            <option value="3x3">3 × 3 · First to three</option>
+          </select>
+          <label class="switch-row" for="gravityToggle">
+            <span><strong>Gravity</strong><small>Pieces fall to the lowest space</small></span>
+            <input type="checkbox" id="gravityToggle" role="switch"><span class="switch-ui"></span>
+          </label>
+          <div class="action-row">
+            <button type="button" class="secondary-btn" id="undoButton" disabled>↶ &nbsp; Undo</button>
+            <button type="button" class="secondary-btn" id="resetButton">↻ &nbsp; New game</button>
+          </div>
+        </section>
+      </aside>
+
+      <section class="board-card" aria-label="Connect Four game board">
+        <div class="board-topline"><span><span class="board-indicator">●</span> GAME BOARD</span><span id="boardDescription">7 COLUMNS <span class="divider-mark">/</span> 6 ROWS</span></div>
+        <div class="board-box">
+          <div class="column-letters" id="columnLetters" aria-hidden="true"></div>
+          <div class="board-shell"><div class="game-grid" id="gameGrid" role="group" aria-label="Game board squares"></div></div>
+          <div class="board-footer"><span id="boardFooterText">SELECT ANY OPEN SQUARE</span><span id="movesCount">00 MOVES PLAYED</span></div>
+        </div>
+        <div class="board-tip"><span class="tip-star">✦</span><p><strong>HOW IT WORKS</strong> Pick a square to reveal a random question. Answer correctly to claim it. Connect four squares to win.</p></div>
+      </section>
+
+      <aside class="right-column">
+        <section class="panel question-panel">
+          <div class="section-label"><span>03 / QUESTION BANK</span></div>
+          <div class="question-visual" aria-hidden="true"><span>?</span><i class="mini-star star-one">✦</i><i class="mini-star star-two">✦</i></div>
+          <div class="question-count"><span id="questionCount">0</span><span>QUESTIONS READY</span></div>
+          <p class="bank-description" id="sourceDescription">Checking your published question sheet.</p>
+          <div id="sourceBadge" class="source-badge"><span class="source-dot"></span> CONNECTING</div>
+          <button type="button" id="editButton" class="primary-btn full-btn">✎ &nbsp; Edit question bank</button>
+          <button type="button" id="syncButton" class="text-btn full-btn">↻ &nbsp; Refresh from Google Sheet</button>
+        </section>
+        <section class="panel guide-panel">
+          <div class="section-label"><span>TEACHER'S DESK</span></div>
+          <div class="guide-row"><span class="guide-number">01</span><span>Choose a square to open a question.</span></div>
+          <div class="guide-row"><span class="guide-number">02</span><span>Reveal the answer, then award the square.</span></div>
+          <div class="guide-row"><span class="guide-number">03</span><span>First team to connect four wins.</span></div>
+        </section>
+      </aside>
+    </div>
+    <footer class="footer"><span>EXPLORE · STANDWITHUS UK</span><span>CLASSROOM GAME · MADE FOR GITHUB PAGES</span></footer>
+  </main>
+
+  <div class="modal-backdrop" id="questionModal" aria-hidden="true">
+    <section class="modal-sheet prompt-sheet" role="dialog" aria-modal="true" aria-labelledby="questionTitle">
+      <div class="modal-topbar"><span class="modal-kicker" id="promptKicker">QUESTION 01 · A1</span><button type="button" class="close-btn" data-close="questionModal" aria-label="Close question">×</button></div>
+      <div class="prompt-head"><span class="question-label">THE CHALLENGE</span><h2 id="questionTitle">Your question appears here.</h2></div>
+      <div id="answerPanel" class="answer-panel" hidden><span class="answer-label">THE ANSWER</span><p id="answerText"></p></div>
+      <div class="prompt-actions">
+        <button type="button" class="outline-btn" id="revealButton">◉ &nbsp; Reveal answer</button>
+        <button type="button" class="outline-btn" id="nextQuestionButton">↻ &nbsp; Different question</button>
+      </div>
+      <div class="award-section"><div class="award-caption">WHO GETS THE SQUARE?</div><div class="award-row"><button type="button" class="award-btn award-blue" id="awardButton0"><span class="award-dot"></span><span id="awardLabel0">BLUE TEAM</span> <strong>+</strong></button><button type="button" class="award-btn award-orange" id="awardButton1"><span class="award-dot"></span><span id="awardLabel1">CORAL TEAM</span> <strong>+</strong></button></div><button class="skip-btn" id="skipButton" type="button">Neither team answered correctly · Skip</button></div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="editorModal" aria-hidden="true">
+    <section class="modal-sheet editor-sheet" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+      <div class="modal-topbar"><span class="modal-kicker">TEACHER TOOLS / QUESTION BANK</span><button type="button" class="close-btn" data-close="editorModal" aria-label="Close question editor">×</button></div>
+      <h2 class="editor-title" id="editorTitle">Make it your game<span>.</span></h2>
+      <p class="editor-intro">Edit the questions below, one per line. Separate a question and answer with <code>||</code>. Your changes will be saved in this browser.</p>
+      <div class="source-card"><div><strong>Google Sheet source</strong><small id="sheetSourceHint">We will attempt to load your published sheet.</small></div><button id="editorSyncButton" class="secondary-btn" type="button">↻ Sync sheet</button></div>
+      <label for="editorText" class="field-label">QUESTIONS &amp; ANSWERS</label>
+      <textarea id="editorText" rows="11" spellcheck="false" placeholder="What year did Israel declare independence? || 1948"></textarea>
+      <div class="editor-under"><span id="editorLineCount">0 questions</span><span>Blank answers are allowed</span></div>
+      <div class="editor-tools"><button type="button" id="csvImportButton" class="outline-btn">↑ Import CSV</button><input id="csvFileInput" type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" hidden><button type="button" id="exportButton" class="outline-btn">↓ Export CSV</button><button type="button" id="restoreDemoButton" class="outline-btn">↻ Load demo</button></div>
+      <div class="editor-alert" id="editorAlert" role="status" hidden></div>
+      <div class="editor-footer"><button type="button" class="secondary-btn" data-close="editorModal">Cancel</button><button type="button" class="primary-btn" id="saveQuestionsButton">Save question bank</button></div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="helpModal" aria-hidden="true">
+    <section class="modal-sheet help-sheet" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="modal-topbar"><span class="modal-kicker">QUICK GUIDE / 60 SECONDS</span><button type="button" class="close-btn" data-close="helpModal" aria-label="Close guide">×</button></div>
+      <h2 id="helpTitle" class="editor-title">How to play<span>.</span></h2>
+      <div class="help-steps"><div><b>01</b><p><strong>Choose a square</strong> One team picks an unclaimed square. With gravity enabled, the piece falls to the lowest available space in the column.</p></div><div><b>02</b><p><strong>Answer the question</strong> A random question appears. The teacher can reveal the answer or choose another question.</p></div><div><b>03</b><p><strong>Claim the square</strong> The teacher awards the square to the correct team. Neither answered? Skip, and the square remains open.</p></div><div><b>04</b><p><strong>Connect to win</strong> Make a line horizontally, vertically or diagonally. You need four in a row, or three on the smallest grid.</p></div></div>
+      <div class="help-note">Questions are random, not tied to particular squares. After every question has appeared, the bank reshuffles and starts again, just like Flippity Connecto.</div>
+      <button class="primary-btn full-btn" type="button" data-close="helpModal">Back to the board</button>
+    </section>
+  </div>
+
+  <div class="win-banner" id="winBanner" aria-live="polite" hidden><span class="win-sparkle">✦</span><span id="winText">Team wins!</span><button type="button" id="winRestartButton">Play again</button><button type="button" id="winDismissButton" aria-label="Dismiss victory banner">×</button></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
