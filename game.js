@@ -7,17 +7,17 @@
   'use strict';
 
   const CFG = window.EXPLORE_CONFIG;
-  const DEMO = window.DEMO_QUESTIONS;
-  const STORAGE_KEY = 'explore_connect_four_questions_v1';
+  const BUNDLED = window.BUNDLED_QUESTIONS;
+  const STORAGE_KEY = 'explore_connect_four_questions_v2';
   const PREF_KEY = 'explore_connect_four_settings_v1';
-  const BACKUP_KEY = 'explore_connect_four_last_sheet_v1';
+  const BACKUP_KEY = 'explore_connect_four_last_sheet_v2';
   const $ = (id) => document.getElementById(id);
   const qs = (selector) => document.querySelectorAll(selector);
   const state = {
     cols: 7, rows: 6, target: 4,
     board: [], gravity: Boolean(CFG.defaultGravity),
     currentTeam: 0, selection: null,
-    questions: [...DEMO], queue: [], drawn: 0, cycle: 1,
+    questions: [...BUNDLED], queue: [], drawn: 0, cycle: 1,
     source: 'demo', active: true, winner: null, winningCells: [],
     history: [], moves: [], theme: CFG.defaultTheme,
     teamNames: [...CFG.teamNames], syncInProgress: false
@@ -35,17 +35,30 @@
     const text = String(value ?? '').replace(/<br\s*\/?\s*>/gi, '\n');
     return text.replace(/<[^>]*>/g, '').replace(/\r/g, '').trim();
   }
+  function safeImagePath(value) {
+    const path = String(value ?? '').trim().replaceAll('\\', '/');
+    // Only images in the site folder or secure public image URLs are allowed.
+    if (/^assets\/[a-zA-Z0-9_./-]+\.(webp|png|jpe?g|gif|avif|svg)$/i.test(path) && !path.includes('..')) return path;
+    if (/^https:\/\/[^\s<>'"]+$/i.test(path)) return path;
+    return '';
+  }
   function tidyQuestions(items) {
     const seen = new Set();
-    return items.map(item => ({
+    return items.map((item, i) => ({
+      id: Number(item.id) || i + 1,
       question: clean(item.question || item.prompt || ''),
-      answer: clean(item.answer || '')
+      answer: clean(item.answer || ''),
+      promptImage: safeImagePath(item.promptImage),
+      answerImage: safeImagePath(item.answerImage)
     })).filter(item => {
       const key = item.question.toLowerCase();
       if (!key || seen.has(key) || item.question.length > 4000) return false;
       seen.add(key);
       return true;
     });
+  }
+  function questionEditorLine(item) {
+    return [item.question, item.answer, item.promptImage || '', item.answerImage || ''].join(' || ');
   }
   function shuffle(input) {
     const result = [...input];
@@ -97,14 +110,10 @@
       label.classList.add('loaded');
       label.innerHTML = '<span class="source-dot"></span> YOUR EDITED QUESTIONS';
       desc.textContent = 'Your custom question bank is saved in this browser.';
-    } else if (state.source === 'backup') {
-      label.classList.add('warning');
-      label.innerHTML = '<span class="source-dot"></span> SAVED SHEET COPY';
-      desc.textContent = 'Showing the last questions successfully loaded from your sheet.';
     } else {
-      label.classList.add('warning');
-      label.innerHTML = '<span class="source-dot"></span> DEMO QUESTIONS';
-      desc.textContent = 'Sample questions only. Sync your Google Sheet or import its CSV.';
+      label.classList.add('loaded');
+      label.innerHTML = '<span class="source-dot"></span> BUNDLED QUESTION BANK';
+      desc.textContent = 'All 22 original questions and their images are included in the game. No connection is required.';
     }
   }
 
@@ -227,10 +236,29 @@
     $('promptKicker').textContent = `QUESTION ${String(state.drawn).padStart(2, '0')} · SQUARE ${coordinate(r,c)}`;
     $('questionTitle').textContent = item.question;
     $('answerText').textContent = item.answer || 'No suggested answer has been provided. The teacher makes the decision.';
+    showQuestionImage('prompt', item.promptImage, item.id);
+    showQuestionImage('answer', item.answerImage, item.id);
     $('answerPanel').hidden = true;
     $('revealButton').textContent = '◉  Reveal answer';
     $('revealButton').disabled = false;
     openModal('questionModal');
+  }
+  function showQuestionImage(kind, path, id) {
+    const frame = $(kind + 'ImageBox');
+    const img = $(kind + 'Image');
+    const link = $(kind + 'ImageLink');
+    img.removeAttribute('src');
+    link.removeAttribute('href');
+    frame.hidden = !path;
+    if (!path) return;
+    img.alt = (kind === 'prompt' ? 'Question' : 'Answer') + ' ' + id + ' image';
+    img.onerror = () => {
+      frame.hidden = true;
+      showToast('An image could not load. Check its file path in questions.js.');
+    };
+    img.onload = () => { frame.hidden = false; };
+    img.src = path;
+    link.href = path;
   }
   function revealAnswer() {
     $('answerPanel').hidden = false;
@@ -316,16 +344,17 @@
     if (!document.querySelector('.modal-backdrop.open')) document.body.style.overflow = '';
   }
   function openEditor() {
-    $('editorText').value = state.questions.map(item => item.question + (item.answer ? ' || ' + item.answer : '')).join('\n');
+    $('editorText').value = state.questions.map(questionEditorLine).join('\n');
     $('editorAlert').hidden = true;
-    $('sheetSourceHint').textContent = state.source === 'sheet' ? 'Currently using questions from the published sheet.' : 'The original published sheet is configured in questions.js.';
+    $('sheetSourceHint').textContent = 'The original 22 questions and images are stored in questions.js. Sheet sync is optional.';
     countEditorLines();
     openModal('editorModal');
   }
   function parseEditorText(text) {
-    return tidyQuestions(String(text).split(/\r?\n/).map(line => {
-      const point = line.indexOf('||');
-      return point === -1 ? {question: line.trim(), answer:''} : {question:line.slice(0,point).trim(),answer:line.slice(point+2).trim()};
+    return tidyQuestions(String(text).split(/\r?\n/).map((line, i) => {
+      const fields = line.split('||').map(x => x.trim());
+      return { id: i + 1, question: fields[0] || '', answer: fields[1] || '',
+        promptImage: fields[2] || '', answerImage: fields[3] || '' };
     }));
   }
   function countEditorLines() {
@@ -346,7 +375,7 @@
   function downloadCSV() {
     const items = parseEditorText($('editorText').value);
     if (!items.length) return editorMessage('There are no questions to export.');
-    const rows = [['Prompt','Answer'], ...items.map(x=>[x.question,x.answer])];
+    const rows = [['Question Number','Prompt','Prompt Image','Answer','Answer Image'], ...items.map(x=>[x.id,x.question,x.promptImage,x.answer,x.answerImage])];
     const csv = '\uFEFF' + rows.map(row=>row.map(escapeForCSV).join(',')).join('\r\n');
     const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
     const url = URL.createObjectURL(blob);
@@ -372,51 +401,45 @@
     if(cell!==''||row.length){row.push(cell);rows.push(row);}
     return rows;
   }
+  function importImagePath(value, id, kind) {
+    const candidate = safeImagePath(value);
+    if (candidate) return candidate;
+    const original = BUNDLED.find(item => item.id === id);
+    // Image names such as 'Golda' or 'Sadat' in the source sheet
+    // refer to the already bundled local image by question number.
+    return original ? original[kind + 'Image'] : '';
+  }
   function parseTable(rows) {
     const matrix = rows.map(row => Array.isArray(row) ? row.map(clean) : []);
-    const promptHeader = /^(prompts?|questions?|terms?|clues?|front|side\s*1)$/i;
-    const answerHeader = /^(answers?|responses?|back|side\s*2)$/i;
-    const candidates=[];
-    for(let i=0;i<Math.min(matrix.length,45);i++) {
-      const row=matrix[i];
-      for(let c=0;c<row.length;c++) {
-        if(!promptHeader.test(row[c]))continue;
-        let a=row.findIndex((v,j)=>j!==c&&answerHeader.test(v));
-        if(a<0)a=c+1;
-        const result=[];
-        for(let r=i+1;r<matrix.length;r++){
-          const question=matrix[r][c]||'';
-          const answer=matrix[r][a]||'';
-          if(!question||promptHeader.test(question))continue;
-          if(/^(get the link here|Flippity(?:\.net)?|template version|click here|options|share|publish to web)$/i.test(question))continue;
-          result.push({question,answer});
-        }
-        candidates.push(result);
+    for (let i = 0; i < Math.min(matrix.length, 25); i++) {
+      const head = matrix[i].map(h => h.toLowerCase().trim());
+      const qcol = head.findIndex(x => /^(prompt|question|questions|prompts)$/.test(x));
+      if (qcol < 0) continue;
+      const acol = head.findIndex(x => /^(answer|answers|response)$/.test(x));
+      const ncol = head.findIndex(x => /^(question number|number|id|#)$/.test(x));
+      const pcol = head.findIndex(x => /^(prompt image|question image|image prompt)$/.test(x));
+      const aicol = head.findIndex(x => /^(answer image|image answer)$/.test(x));
+      const collected = [];
+      for (let r = i + 1; r < matrix.length; r++) {
+        const line = matrix[r];
+        const question = line[qcol] || '';
+        if (!question || /^(flippity|template|instructions|options)$/i.test(question)) continue;
+        const id = ncol >= 0 && Number(line[ncol]) > 0 ? Number(line[ncol]) : collected.length + 1;
+        collected.push({ id, question,
+          answer: acol >= 0 ? (line[acol] || '') : (line[qcol + 1] || ''),
+          promptImage: importImagePath(pcol >= 0 ? line[pcol] : '', id, 'prompt'),
+          answerImage: importImagePath(aicol >= 0 ? line[aicol] : '', id, 'answer') });
       }
+      if (collected.length) return tidyQuestions(collected);
     }
-    if(candidates.length) {
-      candidates.sort((a,b)=>b.length-a.length);
-      const result=tidyQuestions(candidates[0]);
-      if(result.length) return result;
-    }
-    // The older Flippity template sometimes uses a prompt column without
-    // a recognised header. Do not silently import its settings as questions.
-    // A heuristic is only accepted if enough entries are found.
-    const skip = /^(options|gravity|size|title|template|flippity|prompt|answer|connecto|spreadsheet|source|yes|no|board|light|dark|reset|7x6|6x5|5x4|4x4|3x3)/i;
-    let best=[];
-    for(let c=0;c<Math.min(4,Math.max(...matrix.map(r=>r.length),0));c++) {
-      const entries=matrix.slice(2).map(r=>({question:r[c]||'',answer:r[c+1]||''}))
-        .filter(x=>x.question.length>=10&&!skip.test(x.question)&&!x.question.includes('docs.google.com/spreadsheets'));
-      if(entries.length>best.length)best=entries;
-    }
-    return best.length>=8?tidyQuestions(best):[];
+    return [];
   }
   function importRows(rows) {
     const data = parseTable(rows);
-    if (!data.length) throw new Error('The file did not contain recognised Prompt and Answer columns. Please export the question tab as CSV.');
-    $('editorText').value = data.map(item=>item.question + (item.answer ? ' || ' + item.answer : '')).join('\n');
+    if (!data.length) throw new Error('The file needs a Prompt and Answer column.');
+    $('editorText').value = data.map(questionEditorLine).join('\n');
     countEditorLines();
-    editorMessage(`Imported ${data.length} questions into the editor. Select Save question bank to use them.`);
+    editorMessage(`Imported ${data.length} questions and matched any bundled images. Select Save question bank to use them.`);
   }
   async function importCSVFile(file) {
     if (!file) return;
@@ -483,7 +506,7 @@
       const questions=await getPublishedQuestions();
       const count=replaceBank(questions,'sheet','sheet');
       if(fromEditor) {
-        $('editorText').value=questions.map(item=>item.question+(item.answer?' || '+item.answer:'')).join('\n');
+        $('editorText').value=questions.map(questionEditorLine).join('\n');
         countEditorLines();
         editorMessage(`${count} questions loaded and saved from Google Sheet.`);
       }
@@ -523,10 +546,10 @@
     $('csvFileInput').addEventListener('change',e=>{importCSVFile(e.target.files?.[0]);e.target.value='';});
     $('exportButton').addEventListener('click',downloadCSV);
     $('restoreDemoButton').addEventListener('click',()=>{
-      if(!window.confirm('Show the example question bank in the editor? Save afterwards to use it.'))return;
-      $('editorText').value=DEMO.map(q=>q.question+' || '+q.answer).join('\n');
+      if(!window.confirm('Restore the original 22 questions and image paths in the editor? Save afterwards to use them.'))return;
+      $('editorText').value=BUNDLED.map(questionEditorLine).join('\n');
       countEditorLines();
-      editorMessage('Example questions loaded into the editor. They are not from your original spreadsheet.');
+      editorMessage('The original 22 questions and image references are ready. Select Save to apply.');
     });
     $('winRestartButton').addEventListener('click',()=>startGame(state.cols+'x'+state.rows,true));
     $('winDismissButton').addEventListener('click',()=>$('winBanner').hidden=true);
@@ -553,12 +576,11 @@
     state.gravity=typeof prefs.gravity==='boolean'?prefs.gravity:CFG.defaultGravity;
     updateTheme();updateNames();wireEvents();
     const local=safeRead(STORAGE_KEY);
-    const lastSheet=safeRead(BACKUP_KEY);
     if(local?.questions?.length) replaceBank(local.questions,'local');
-    else if(lastSheet?.questions?.length) replaceBank(lastSheet.questions,'backup');
-    else replaceBank(DEMO,'demo');
+    else replaceBank(BUNDLED,'bundled');
     startGame(/^(7x6|6x5|5x4|4x4|3x3)$/.test(prefs.size)?prefs.size:CFG.defaultBoard,true);
-    if(!local?.questions?.length) syncSheet(false,true);
+    // The original bundled question bank is authoritative. We do not
+    // replace it with a live sheet automatically, so images stay linked.
   }
   init();
 })();

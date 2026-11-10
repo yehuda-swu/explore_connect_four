@@ -89,10 +89,10 @@
           <div class="section-label"><span>03 / QUESTION BANK</span></div>
           <div class="question-visual" aria-hidden="true"><span>?</span><i class="mini-star star-one">✦</i><i class="mini-star star-two">✦</i></div>
           <div class="question-count"><span id="questionCount">0</span><span>QUESTIONS READY</span></div>
-          <p class="bank-description" id="sourceDescription">Checking your published question sheet.</p>
+          <p class="bank-description" id="sourceDescription">Original questions with images included.</p>
           <div id="sourceBadge" class="source-badge"><span class="source-dot"></span> CONNECTING</div>
           <button type="button" id="editButton" class="primary-btn full-btn">✎ &nbsp; Edit question bank</button>
-          <button type="button" id="syncButton" class="text-btn full-btn">↻ &nbsp; Refresh from Google Sheet</button>
+          <button type="button" id="syncButton" class="text-btn full-btn">↻ &nbsp; Import live Google Sheet</button>
         </section>
         <section class="panel guide-panel">
           <div class="section-label"><span>TEACHER'S DESK</span></div>
@@ -109,7 +109,17 @@
     <section class="modal-sheet prompt-sheet" role="dialog" aria-modal="true" aria-labelledby="questionTitle">
       <div class="modal-topbar"><span class="modal-kicker" id="promptKicker">QUESTION 01 · A1</span><button type="button" class="close-btn" data-close="questionModal" aria-label="Close question">×</button></div>
       <div class="prompt-head"><span class="question-label">THE CHALLENGE</span><h2 id="questionTitle">Your question appears here.</h2></div>
-      <div id="answerPanel" class="answer-panel" hidden><span class="answer-label">THE ANSWER</span><p id="answerText"></p></div>
+      <figure id="promptImageBox" class="question-image-box" hidden>
+        <div class="image-canvas"><img id="promptImage" alt="Question image"></div>
+        <figcaption><span>QUESTION IMAGE</span><a id="promptImageLink" target="_blank" rel="noopener noreferrer">View full image ↗</a></figcaption>
+      </figure>
+      <div id="answerPanel" class="answer-panel" hidden>
+        <span class="answer-label">THE ANSWER</span><p id="answerText"></p>
+        <figure id="answerImageBox" class="question-image-box answer-image-box" hidden>
+          <div class="image-canvas"><img id="answerImage" alt="Answer image"></div>
+          <figcaption><span>ANSWER IMAGE</span><a id="answerImageLink" target="_blank" rel="noopener noreferrer">View full image ↗</a></figcaption>
+        </figure>
+      </div>
       <div class="prompt-actions">
         <button type="button" class="outline-btn" id="revealButton">◉ &nbsp; Reveal answer</button>
         <button type="button" class="outline-btn" id="nextQuestionButton">↻ &nbsp; Different question</button>
@@ -122,12 +132,12 @@
     <section class="modal-sheet editor-sheet" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
       <div class="modal-topbar"><span class="modal-kicker">TEACHER TOOLS / QUESTION BANK</span><button type="button" class="close-btn" data-close="editorModal" aria-label="Close question editor">×</button></div>
       <h2 class="editor-title" id="editorTitle">Make it your game<span>.</span></h2>
-      <p class="editor-intro">Edit the questions below, one per line. Separate a question and answer with <code>||</code>. Your changes will be saved in this browser.</p>
-      <div class="source-card"><div><strong>Google Sheet source</strong><small id="sheetSourceHint">We will attempt to load your published sheet.</small></div><button id="editorSyncButton" class="secondary-btn" type="button">↻ Sync sheet</button></div>
+      <p class="editor-intro">Each line has four fields separated by <code>||</code>: <strong>Question</strong>, <strong>Answer</strong>, <strong>Question image path</strong>, <strong>Answer image path</strong>. Leave an image field blank if none is needed. Changes are saved in this browser.</p>
+      <div class="source-card"><div><strong>Google Sheet source</strong><small id="sheetSourceHint">We will attempt to load your published sheet.</small></div><button id="editorSyncButton" class="secondary-btn" type="button">↻ Import sheet</button></div>
       <label for="editorText" class="field-label">QUESTIONS &amp; ANSWERS</label>
-      <textarea id="editorText" rows="11" spellcheck="false" placeholder="What year did Israel declare independence? || 1948"></textarea>
-      <div class="editor-under"><span id="editorLineCount">0 questions</span><span>Blank answers are allowed</span></div>
-      <div class="editor-tools"><button type="button" id="csvImportButton" class="outline-btn">↑ Import CSV</button><input id="csvFileInput" type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" hidden><button type="button" id="exportButton" class="outline-btn">↓ Export CSV</button><button type="button" id="restoreDemoButton" class="outline-btn">↻ Load demo</button></div>
+      <textarea id="editorText" rows="11" spellcheck="false" placeholder="Who was falsely accused of spying in France? || Alfred Dreyfus ||  || assets/questions/q01-answer.webp"></textarea>
+      <div class="editor-under"><span id="editorLineCount">0 questions</span><span>Images are optional</span></div>
+      <div class="editor-tools"><button type="button" id="csvImportButton" class="outline-btn">↑ Import CSV</button><input id="csvFileInput" type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" hidden><button type="button" id="exportButton" class="outline-btn">↓ Export CSV</button><button type="button" id="restoreDemoButton" class="outline-btn">↻ Restore originals</button></div>
       <div class="editor-alert" id="editorAlert" role="status" hidden></div>
       <div class="editor-footer"><button type="button" class="secondary-btn" data-close="editorModal">Cancel</button><button type="button" class="primary-btn" id="saveQuestionsButton">Save question bank</button></div>
     </section>

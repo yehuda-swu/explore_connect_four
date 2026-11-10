@@ -173,3 +173,32 @@ body[data-theme="day"] .brand-icon {color:white;}
   .footer{font-size:8px;letter-spacing:.7px;}.modal-backdrop{padding:10px;}.modal-sheet{max-height:calc(100dvh - 20px);padding:17px;border-radius:17px;}.prompt-head h2{font-size:24px;}.award-btn{padding:12px 8px;font-size:10px;}.source-card {flex-direction:column;align-items:stretch;}.editor-tools .outline-btn{flex:1;}.win-banner{font-size:13px;gap:8px;}
 }
 @media(prefers-reduced-motion:reduce) {*,*::before,*::after{animation:none!important;transition:none!important;}}
+
+/* Image question cards: images are bundled with the site, never embedded as dead sheet links. */
+.prompt-sheet {width:min(790px,100%);}
+.prompt-sheet .modal-topbar {margin-bottom:16px;}
+.prompt-head h2 {margin-bottom:14px;font-size:clamp(24px,2.1vw,32px);}
+.question-image-box {margin:0 0 16px;background:#081a33;border:1px solid #3f638b;border-radius:13px;overflow:hidden;}
+.question-image-box .image-canvas {display:flex;align-items:center;justify-content:center;min-height:140px;max-height:min(39vh,340px);padding:9px;background:radial-gradient(circle at 50% 28%,#1a365c,#07182e 80%);}
+.question-image-box img {display:block;width:100%;height:auto;max-height:min(37vh,325px);object-fit:contain;object-position:center;}
+.question-image-box figcaption {display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 13px;border-top:1px solid #315474;color:#9dbbdd;font-weight:850;letter-spacing:1.2px;font-size:9px;}
+.question-image-box a {font-weight:800;color:#91d8ff;text-decoration:none;letter-spacing:0;font-size:11px;}
+.question-image-box a:hover {text-decoration:underline;}
+.answer-image-box {margin-top:13px;margin-bottom:0;border-color:#3c746d;}
+.answer-panel {margin-bottom:17px;}
+.answer-panel .image-canvas {max-height: min(33vh,260px);}
+.answer-panel img {max-height:min(31vh,245px);}
+.prompt-actions {margin-bottom:16px;}
+.award-section {padding-top:14px;}
+@media(max-width:540px) {
+ .prompt-sheet {width:100%;}
+ .prompt-head h2 {font-size:21px;line-height:1.2;}
+ .question-image-box .image-canvas {min-height:75px;max-height:28vh;padding:6px;}
+ .question-image-box img {max-height:26vh;}
+ .answer-panel .image-canvas {max-height:22vh;}
+ .answer-panel img {max-height:20vh;}
+ .question-image-box figcaption {font-size:8px;padding:7px 9px;}
+ .question-image-box a {font-size:10px;}
+ .modal-topbar {margin-bottom:12px;}
+ .prompt-actions {gap:6px;margin-bottom:12px;}
+}
